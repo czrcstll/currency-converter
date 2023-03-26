@@ -1,4 +1,76 @@
-let api = 'https://api.currencyfreaks.com/v2.0/rates/latest?apikey=YOUR_APIKEY'
-const fromDropDown = document.getElementById("from-currency-select");
-const toDropDown = document.getElementById("to-currency-select");
+let rate1 = document.querySelector(".rate1");
+let rate2 = document.querySelector(".rate2");
+let resultBtn = document.querySelector(".result");
+let selects = document.querySelectorAll(".options");
+let select1 = selects[0];
+let select2 = selects[1];
+let inputs = document.querySelectorAll(".input input");
+let input1 = inputs[0];
+let input2 = inputs[1];
 
+let rates = {};
+
+let requestURL = "https://api.exchangerate.host/latest?base=USD";
+
+fetchRates();
+
+async function fetchRates() {
+  let res = await fetch(requestURL);
+  res = await res.json();
+  rates = res.rates;
+  populateOptions();
+}
+
+function populateOptions() {
+  let val = "";
+  Object.keys(rates).forEach((code) => {
+    let str = `<option value="${code}">${code}</option>`;
+    val += str;
+  });
+  selects.forEach((s) => (s.innerHTML = val));
+}
+
+function convert(val, fromCurr, toCurr) {
+  let v = (val / rates[fromCurr]) * rates[toCurr];
+  let v1 = v.toFixed(3);
+  v1 = v1 == 0.0 ? v.toFixed(5) : v1;
+  return v1;
+}
+
+function displayRate() {
+  let v1 = select1.value;
+  let v2 = select2.value;
+
+  let val = convert(1, v1, v2);
+
+  rate1.innerHTML = `1 ${v1} equals`;
+  rate2.innerHTML = `${val} ${v2}`;
+}
+
+resultBtn.addEventListener("click", () => {
+  let fromCurr = select1.value;
+  let fromVal = parseFloat(input1.value);
+  let toCurr = select2.value;
+
+  if (isNaN(fromVal)) {
+    alert("Enter a number");
+  } else {
+    let cVal = convert(fromVal, fromCurr, toCurr);
+    input2.value = cVal;
+  }
+});
+
+selects.forEach((s) => s.addEventListener("change", displayRate));
+document.querySelector(".swap").addEventListener("click", () => {
+  let in1 = input1.value;
+  let in2 = input2.value;
+  let op1 = select1.value;
+  let op2 = select2.value;
+
+  input1.value = in2;
+  input2.value = in1;
+  select1.value = op2;
+  select2.value = op1;
+
+  displayRate();
+});
